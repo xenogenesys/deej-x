@@ -98,13 +98,28 @@ void loop() {
 
 void updateSliderValues() {
   for (int i = 0; i < NUM_SLIDERS; i++) {
+
+    // Shift the buffer
+    for(int j = BUFFER_SIZE - 1; j > 0; j--) {
+      analogBuffer[i][j] = analogBuffer[i][j-1];
+    }
+
     // Read analog value of slider
-    int rawValue = analogRead(analogInputs[i]);
+    analogRead(analogInputs[i]);
+    delayMicroseconds(100);
+    analogBuffer[i][0] = analogRead(analogInputs[i]);
     //rawValue = (rawValue - 1023) * -1;
 
+    // Use average value instead of raw value
+    long sum = 0;
+    for (int j = 0; j < BUFFER_SIZE; j++){
+      sum += analogBuffer[i][j];
+    }
+    int averageValue = sum / BUFFER_SIZE;
+
     // Update Slider value if change is great
-    if (abs(rawValue - displayVolume[currentLayer][i]) > 10 && inhibitReads == false) {
-      displayVolume[currentLayer][i] = rawValue;
+    if (abs(averageValue - displayVolume[currentLayer][i]) > 10 && inhibitReads == false) {
+      displayVolume[currentLayer][i] = averageValue;
       displayVol(i);
       display.display();
       startTime = currTime;
