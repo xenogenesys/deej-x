@@ -75,6 +75,8 @@ void setup() {
       analogBuffer[i][j] = analogRead(analogInputs[i]);
     }
   }
+  Wire.begin();
+  Wire.setClock(400000);
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
@@ -98,11 +100,14 @@ void loop() {
 }
 
 void updateSliderValues() {
+  bool screenNeedsUpdate = false;
+
   for (int i = 0; i < NUM_SLIDERS; i++) {
 
     // Read analog value of slider
     analogRead(analogInputs[i]);
-    delayMicroseconds(100);
+    // Remove buffer delay
+    // delayMicroseconds(100);
     int rawValue = analogRead(analogInputs[i]);
     //rawValue = (rawValue - 1023) * -1;
 
@@ -120,8 +125,10 @@ void updateSliderValues() {
     }
     int averageValue = sum / BUFFER_SIZE;
 
+    // Temporal calibrated value
+    // int calibratedValue = averageValue;
     // Calibrate extreme values
-    int calibratedValue = map(averageValue, 15, 1015, 0, 1023);
+    int calibratedValue = map(averageValue, 10, 1017, 0, 1023);
 
     // Constrain to avoid negative numbers
     calibratedValue = constrain(calibratedValue, 0, 1023);
@@ -130,9 +137,16 @@ void updateSliderValues() {
     if (abs(calibratedValue - displayVolume[currentLayer][i]) > 2 && inhibitReads == false) {
       displayVolume[currentLayer][i] = calibratedValue;
       displayVol(i);
-      display.display();
+      // Don't display yet
+      //display.display();
+      screenNeedsUpdate = true;
+
       startTime = currTime;
       standby = 0;
+    }
+
+    if (screenNeedsUpdate){
+      display.display();
     }
   }
 }
