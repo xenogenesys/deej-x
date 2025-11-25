@@ -60,6 +60,8 @@ bool standby = 0;
 uint8_t currentLayer = 0;
 bool inhibitReads = false;
 
+int lastActiveSlider = -1;
+
 
 //see http://javl.github.io/image2cpp/ for how to make these
 
@@ -92,8 +94,8 @@ void loop() {
   currTime = millis();
    if (standby == 0 && (currTime - startTime >= sleepAfter)) {
     alwayson();
-    standby = 1;
     display.display();
+    standby = 1;
     startTime = currTime;
    }
   delay(10);
@@ -128,7 +130,7 @@ void updateSliderValues() {
     // Temporal calibrated value
     // int calibratedValue = averageValue;
     // Calibrate extreme values
-    int calibratedValue = map(averageValue, 10, 1017, 0, 1023);
+    int calibratedValue = map(averageValue, 12, 1017, 0, 1023);
 
     // Constrain to avoid negative numbers
     calibratedValue = constrain(calibratedValue, 0, 1023);
@@ -144,11 +146,11 @@ void updateSliderValues() {
       startTime = currTime;
       standby = 0;
     }
+  }
 
-    if (screenNeedsUpdate){
+  if (screenNeedsUpdate){
       display.display();
     }
-  }
 }
 
 void sendSliderValues() {
@@ -167,7 +169,7 @@ void sendSliderValues() {
 
 void alwayson(){
   display.clearDisplay();
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
   display.setCursor(92, 0);
@@ -219,9 +221,9 @@ void alwayson(){
 
   display.setCursor(92, 50);
   display.print((analogRead(A7)) / 10.3 , 0);
-  display.fillRect(13, 51, ((analogRead(A3)) / 13.6), 13, WHITE);    
+  display.fillRect(13, 51, ((analogRead(A7)) / 13.6), 13, WHITE);    
   display.setCursor(0, 50);
-  display.drawBitmap(0, 52, ART_4, 11, 11, WHITE);
+  display.drawBitmap(0, 52, ART_5, 11, 11, WHITE);
   display.setCursor(116, 50);
   display.print("%");
   display.drawFastHLine(12, 50, 76, WHITE);
@@ -233,16 +235,27 @@ void alwayson(){
 void displayVol(int i){
   int percentage = percentage_volume(displayVolume[currentLayer][i]);
 
-  display.clearDisplay();
+  if (i != lastActiveSlider){
+    display.clearDisplay();
+
+    display.setTextSize(3);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 16);
+    display.println(analogSliderNames[i]);
+
+    lastActiveSlider = i;
+  }
+  else {
+    display.fillRect(0, 0, 126, 16, SSD1306_BLACK);
+
+    display.fillRect(0, 40, 128, 24, SSD1306_BLACK);
+  }
+
   display.fillRect(0, 0, percentage*1.28, 16, WHITE);
   display.setTextSize(3);             //pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0, 16);             // Start at top-left corner
-  display.println(analogSliderNames[i]);
   display.setCursor(0, 40);
-  display.setTextSize(3);
   display.println(percentage);
-  display.display();
 }
 
 int percentage_volume(int actual_value){
