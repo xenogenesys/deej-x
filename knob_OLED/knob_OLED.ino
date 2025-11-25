@@ -33,18 +33,24 @@ const unsigned char ART_4 [] PROGMEM = {
 	0x03, 0xc0, 0x03, 0xc0, 0x01, 0x80
 };
 
-const int NUM_SLIDERS = 4;
+const unsigned char ART_5 [] PROGMEM = {
+	// 'music, 11x11px
+	0x1c, 0x00, 0x1e, 0x00, 0x17, 0x80, 0x11, 0xc0, 0x70, 0xc0, 0xf0, 0x40, 0xf0, 0x40, 0x61, 0xc0, 
+	0x03, 0xc0, 0x03, 0xc0, 0x01, 0x80
+};
+
+const int NUM_SLIDERS = 5;
 const int NUM_OF_LAYERS = 1;
-const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3};
+const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A7};
 
 //make a buffer to avoid jitter
-const int BUFFER_SIZE = 4;
+const int BUFFER_SIZE = 5;
 int analogBuffer[NUM_SLIDERS][BUFFER_SIZE];
 
 
 int displayVolume[NUM_OF_LAYERS][NUM_SLIDERS];
 int analogSliderValues[NUM_SLIDERS];
-String analogSliderNames[NUM_SLIDERS] = {"Current","Game","Discord","Spotify"};//you can change the names displayed here
+String analogSliderNames[NUM_SLIDERS] = {"Current","Game","Discord","Spotify", "Mic"};//you can change the names displayed here
 
 const unsigned long sleepAfter = 1000; // this value will change how long the oled will display until turning off.
 unsigned long startTime;
@@ -163,6 +169,18 @@ void alwayson(){
 
   display.setCursor(92, 50);
   display.print((analogRead(A3)) / 10.3 , 0);
+  display.fillRect(13, 51, ((analogRead(A3)) / 13.6), 13, WHITE);    
+  display.setCursor(0, 50);
+  display.drawBitmap(0, 52, ART_4, 11, 11, WHITE);
+  display.setCursor(116, 50);
+  display.print("%");
+  display.drawFastHLine(12, 50, 76, WHITE);
+  display.drawFastHLine(12, 63, 76, WHITE);
+  display.drawFastVLine(12, 50, 14, WHITE);
+  display.drawFastVLine(88, 50, 14, WHITE);
+
+  display.setCursor(92, 50);
+  display.print((analogRead(A7)) / 10.3 , 0);
   display.fillRect(13, 51, ((analogRead(A3)) / 13.6), 13, WHITE);    
   display.setCursor(0, 50);
   display.drawBitmap(0, 52, ART_4, 11, 11, WHITE);
