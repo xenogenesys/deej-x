@@ -44,7 +44,7 @@ const int NUM_OF_LAYERS = 1;
 const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A7};
 
 //make a buffer to avoid jitter
-const int BUFFER_SIZE = 5;
+const int BUFFER_SIZE = 4;
 int analogBuffer[NUM_SLIDERS][BUFFER_SIZE];
 
 
@@ -65,7 +65,8 @@ bool inhibitReads = false;
 
 
 void setup() { 
-  Serial.begin(9600);
+  //Serial.begin(9600);
+  Serial.begin(115200);
   for (int i = 0; i < NUM_SLIDERS; i++) {
     pinMode(analogInputs[i], INPUT);
   }
@@ -99,17 +100,19 @@ void loop() {
 void updateSliderValues() {
   for (int i = 0; i < NUM_SLIDERS; i++) {
 
+    // Read analog value of slider
+    analogRead(analogInputs[i]);
+    delayMicroseconds(100);
+    int rawValue = analogRead(analogInputs[i]);
+    //rawValue = (rawValue - 1023) * -1;
+
+    
     // Shift the buffer
     for(int j = BUFFER_SIZE - 1; j > 0; j--) {
       analogBuffer[i][j] = analogBuffer[i][j-1];
     }
-
-    // Read analog value of slider
-    analogRead(analogInputs[i]);
-    delayMicroseconds(100);
-    analogBuffer[i][0] = analogRead(analogInputs[i]);
-    //rawValue = (rawValue - 1023) * -1;
-
+    analogBuffer[i][0] = rawValue;
+ 
     // Use average value instead of raw value
     long sum = 0;
     for (int j = 0; j < BUFFER_SIZE; j++){
@@ -117,9 +120,15 @@ void updateSliderValues() {
     }
     int averageValue = sum / BUFFER_SIZE;
 
+    // Calibrate extreme values
+    int calibratedValue = map(averageValue, 15, 1015, 0, 1023);
+
+    // Constrain to avoid negative numbers
+    calibratedValue = constrain(calibratedValue, 0, 1023);
+
     // Update Slider value if change is great
-    if (abs(averageValue - displayVolume[currentLayer][i]) > 10 && inhibitReads == false) {
-      displayVolume[currentLayer][i] = averageValue;
+    if (abs(calibratedValue - displayVolume[currentLayer][i]) > 2 && inhibitReads == false) {
+      displayVolume[currentLayer][i] = calibratedValue;
       displayVol(i);
       display.display();
       startTime = currTime;
