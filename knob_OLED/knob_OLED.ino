@@ -39,6 +39,9 @@ const unsigned char ART_5 [] PROGMEM = {
 	0x03, 0xc0, 0x03, 0xc0, 0x01, 0x80
 };
 
+// Array of pointers to your bitmaps so we can loop through them
+const unsigned char* iconArray[5] = {ART_1, ART_2, ART_3, ART_4, ART_5};
+
 const int NUM_SLIDERS = 5;
 const int NUM_OF_LAYERS = 1;
 const int analogInputs[NUM_SLIDERS] = {A0, A1, A2, A3, A7};
@@ -50,7 +53,7 @@ int analogBuffer[NUM_SLIDERS][BUFFER_SIZE];
 
 int displayVolume[NUM_OF_LAYERS][NUM_SLIDERS];
 int analogSliderValues[NUM_SLIDERS];
-String analogSliderNames[NUM_SLIDERS] = {"Current","Game","Discord","Spotify", "Mic"};//you can change the names displayed here
+String analogSliderNames[NUM_SLIDERS] = {"Main", "Game", "Chat", "Music", "Mic"};//you can change the names displayed here
 
 const unsigned long sleepAfter = 1000; // this value will change how long the oled will display until turning off.
 unsigned long startTime;
@@ -60,8 +63,7 @@ bool standby = 0;
 uint8_t currentLayer = 0;
 bool inhibitReads = false;
 
-int lastActiveSlider = -1;
-
+// int lastActiveSlider = -1;
 
 //see http://javl.github.io/image2cpp/ for how to make these
 
@@ -98,7 +100,7 @@ void loop() {
     standby = 1;
     startTime = currTime;
    }
-  delay(10);
+  delay(1);
 }
 
 void updateSliderValues() {
@@ -172,90 +174,128 @@ void alwayson(){
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
 
-  display.setCursor(92, 0);
-  display.print((analogRead(A0)) / 10.3 , 0);
-  display.fillRect(13, 1, ((analogRead(A0)) / 13.6), 13, WHITE);  
-  display.drawBitmap(0, 2, ART_1, 11, 11, WHITE);
-  display.setCursor(116, 0);
-  display.print("%");
-  display.drawFastHLine(12, 0, 76, WHITE);
-  display.drawFastHLine(12, 14, 76, WHITE);
-  display.drawFastVLine(12, 0, 15, WHITE);
-  display.drawFastVLine(88, 0, 15, WHITE);
+  int rowHeight = 12; // Fits 5 items in 64px
 
-  display.setCursor(92, 16);
-  display.print((analogRead(A1)) / 10.3 , 0);
-  display.fillRect(13, 17, ((analogRead(A1)) / 13.6), 13, WHITE);  
-  display.setCursor(0, 16); 
-  display.drawBitmap(0, 18, ART_2, 11, 11, WHITE);
-  display.setCursor(116, 16);
-  display.print("%");
-  display.drawFastHLine(12, 16, 76, WHITE);
-  display.drawFastHLine(12, 29, 76, WHITE);
-  display.drawFastVLine(12, 16, 14, WHITE);
-  display.drawFastVLine(88, 16, 14, WHITE); 
+  for (int i = 0; i < NUM_SLIDERS; i++) {
+    int y = i * rowHeight; 
+
+    // Icon
+    display.drawBitmap(0, y + 1, iconArray[i], 11, 11, WHITE);
+
+    // Frame
+    display.drawRect(13, y + 2, 80, 8, WHITE);
+
+    // Fill
+    int barWidth = map(displayVolume[currentLayer][i], 0, 1023, 0, 76);
+    display.fillRect(15, y + 4, barWidth, 4, WHITE);
+
+    int percent = map(displayVolume[currentLayer][i], 0, 1023, 0, 100);
+
+    // Text
+    // display.setCursor(98, y + 2);
+    // display.print(displayVolume[currentLayer][i] / 10); // Print %
+
+    if (percent == 100) display.setCursor(95, y + 2);
+    else if (percent < 10) display.setCursor(107, y + 2);
+    else display.setCursor(101, y + 2);
+
+    display.print(percent);
+    display.print("%");
+  }
+
+  // display.clearDisplay();
+  // display.setTextSize(2);
+  // display.setTextColor(SSD1306_WHITE);
+
+  // display.setCursor(92, 0);
+  // display.print((analogRead(A0)) / 10.3 , 0);
+  // display.fillRect(1, 2, ((analogRead(A0)) / 13.6), 13, WHITE);  
+  // display.drawBitmap(0, 2, ART_1, 11, 11, WHITE);
+  // display.setCursor(116, 0);
+  // display.print("%");
+  // display.drawFastHLine(12, 0, 76, WHITE);
+  // display.drawFastHLine(12, 14, 76, WHITE);
+  // display.drawFastVLine(12, 0, 14, WHITE);
+  // display.drawFastVLine(88, 0, 14, WHITE);
+
+  // display.setCursor(92, 16);
+  // display.print((analogRead(A1)) / 10.3 , 0);
+  // display.fillRect(13, 17, ((analogRead(A1)) / 13.6), 13, WHITE);  
+  // display.setCursor(0, 16); 
+  // display.drawBitmap(0, 18, ART_2, 11, 11, WHITE);
+  // display.setCursor(116, 16);
+  // display.print("%");
+  // display.drawFastHLine(12, 16, 76, WHITE);
+  // display.drawFastHLine(12, 29, 76, WHITE);
+  // display.drawFastVLine(12, 16, 14, WHITE);
+  // display.drawFastVLine(88, 16, 14, WHITE); 
   
-  display.setCursor(92, 33);
-  display.print((analogRead(A2)) / 10.3 , 0);
-  display.fillRect(13, 34, ((analogRead(A2)) / 13.6), 13, WHITE);  
-  display.setCursor(0, 33);
-  display.drawBitmap(0, 34, ART_3, 11, 11, WHITE);
-  display.setCursor(116, 32);
-  display.print("%");
-  display.drawFastHLine(12, 33, 76, WHITE);
-  display.drawFastHLine(12, 46, 76, WHITE);
-  display.drawFastVLine(12, 33, 14, WHITE);
-  display.drawFastVLine(88, 33, 14, WHITE);
+  // display.setCursor(92, 33);
+  // display.print((analogRead(A2)) / 10.3 , 0);
+  // display.fillRect(13, 34, ((analogRead(A2)) / 13.6), 13, WHITE);  
+  // display.setCursor(0, 33);
+  // display.drawBitmap(0, 34, ART_3, 11, 11, WHITE);
+  // display.setCursor(116, 32);
+  // display.print("%");
+  // display.drawFastHLine(12, 33, 76, WHITE);
+  // display.drawFastHLine(12, 46, 76, WHITE);
+  // display.drawFastVLine(12, 33, 14, WHITE);
+  // display.drawFastVLine(88, 33, 14, WHITE);
 
-  display.setCursor(92, 50);
-  display.print((analogRead(A3)) / 10.3 , 0);
-  display.fillRect(13, 51, ((analogRead(A3)) / 13.6), 13, WHITE);    
-  display.setCursor(0, 50);
-  display.drawBitmap(0, 52, ART_4, 11, 11, WHITE);
-  display.setCursor(116, 50);
-  display.print("%");
-  display.drawFastHLine(12, 50, 76, WHITE);
-  display.drawFastHLine(12, 63, 76, WHITE);
-  display.drawFastVLine(12, 50, 14, WHITE);
-  display.drawFastVLine(88, 50, 14, WHITE);
-
-  display.setCursor(92, 50);
-  display.print((analogRead(A7)) / 10.3 , 0);
-  display.fillRect(13, 51, ((analogRead(A7)) / 13.6), 13, WHITE);    
-  display.setCursor(0, 50);
-  display.drawBitmap(0, 52, ART_5, 11, 11, WHITE);
-  display.setCursor(116, 50);
-  display.print("%");
-  display.drawFastHLine(12, 50, 76, WHITE);
-  display.drawFastHLine(12, 63, 76, WHITE);
-  display.drawFastVLine(12, 50, 14, WHITE);
-  display.drawFastVLine(88, 50, 14, WHITE);
+  // display.setCursor(92, 50);
+  // display.print((analogRead(A3)) / 10.3 , 0);
+  // display.fillRect(13, 51, ((analogRead(A3)) / 13.6), 13, WHITE);    
+  // display.setCursor(0, 50);
+  // display.drawBitmap(0, 52, ART_4, 11, 11, WHITE);
+  // display.setCursor(116, 50);
+  // display.print("%");
+  // display.drawFastHLine(12, 50, 76, WHITE);
+  // display.drawFastHLine(12, 63, 76, WHITE);
+  // display.drawFastVLine(12, 50, 14, WHITE);
+  // display.drawFastVLine(88, 50, 14, WHITE);
 }
 
 void displayVol(int i){
   int percentage = percentage_volume(displayVolume[currentLayer][i]);
 
-  if (i != lastActiveSlider){
-    display.clearDisplay();
+  display.clearDisplay();
 
-    display.setTextSize(3);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 16);
-    display.println(analogSliderNames[i]);
+  // 1. Draw Name
+  display.setTextSize(3);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 17);
+  display.println(analogSliderNames[i]);
 
-    lastActiveSlider = i;
-  }
-  else {
-    display.fillRect(0, 0, 126, 16, SSD1306_BLACK);
-
-    display.fillRect(0, 40, 128, 24, SSD1306_BLACK);
-  }
-
-  display.fillRect(0, 0, percentage*1.28, 16, WHITE);
-  display.setTextSize(3);             //pixel scale
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  // 2. Draw Bar
+  display.fillRect(0, 0, percentage * 1.28, 16, SSD1306_WHITE);
+  
+  // 3. Draw Number
+  display.setTextSize(3);
+  display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 40);
   display.println(percentage);
+
+  // if (i != lastActiveSlider){
+  //   display.clearDisplay();
+
+  //   display.setTextSize(3);
+  //   display.setTextColor(SSD1306_WHITE);
+  //   display.setCursor(0, 16);
+  //   display.println(analogSliderNames[i]);
+
+  //   lastActiveSlider = i;
+  // }
+  // else {
+  //   display.fillRect(0, 0, 126, 16, SSD1306_BLACK);
+
+  //   display.fillRect(0, 40, 128, 24, SSD1306_BLACK);
+  // }
+
+  // display.fillRect(0, 0, percentage*1.28, 16, WHITE);
+  // display.setTextSize(3);             //pixel scale
+  // display.setTextColor(SSD1306_WHITE);        // Draw white text
+  // display.setCursor(0, 40);
+  // display.println(percentage);
 }
 
 int percentage_volume(int actual_value){
